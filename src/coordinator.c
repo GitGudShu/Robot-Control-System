@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdio.h>
 #include <sys/shm.h>
 #include <sys/msg.h>
@@ -58,11 +59,17 @@ int main() {
     }
 
     while (are_tasks_done(tasks) == 0) {
+        struct RobotMessage rcv_message;
+        errno = 0;
+        msgrcv(makers[0].queue_id, &rcv_message, sizeof(rcv_message), 2, IPC_NOWAIT);
+        if (errno != ENOMSG) {
+            makers[0].working = 0;
+        }
         for (int i = 0; i < NUM_TASKS; i++) {
+            if (tasks[i].working == 1) continue;
             struct RobotMessage robot_message = {1,i};
             makers[0].working = 1;
             msgsnd(makers[0].queue_id, &robot_message, sizeof(robot_message), 0);
-            sleep(1);
         }
         printf("bam loop\n");
         print_tasks_state(tasks);

@@ -29,7 +29,12 @@ int main(int argc, char *argv[]) {
     for (;;) {
         struct RobotMessage message;
         msgrcv(queue_id, &message, sizeof(message), 1, 0);
+        tasks[message.task_index].working = 1;
         printf("Wokring on Task ID %d\n", message.task_index);
+        sleep(2);
         tasks[message.task_index].stage = tasks[message.task_index].stage + 1;
+        tasks[message.task_index].working = 0;
+        message.message_type = 2;
+        msgsnd(queue_id, &message, sizeof(message), 0);
     }
 }
