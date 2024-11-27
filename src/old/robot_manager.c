@@ -16,7 +16,7 @@
 
 typedef struct {
     int task_id;
-    int stage; // 0: Made, 1: Painted, 2: Transported
+    int stage; // 0: Pending, 1: Made, 2: Painted, 3: Transported
 } Task;
 
 Task tasks[NUM_TASKS];
@@ -26,7 +26,6 @@ sem_t sem_recharge_slots;
 sem_t sem_make_rooms;
 sem_t sem_paint_rooms;
 sem_t sem_transport_rooms;
-pthread_mutex_t task_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 typedef struct {
     int energy;
@@ -64,16 +63,13 @@ void* maker_robot(void* arg) {
     Robot *robot = (Robot *)arg;
     while (1) {
         sem_wait(&sem_make_rooms);
-        pthread_mutex_lock(&task_mutex);
 
         if (made_count >= NUM_TASKS) {
-            pthread_mutex_unlock(&task_mutex);
             sem_post(&sem_make_rooms);
             break;
         }
 
         if (robot->energy < 3) {
-            pthread_mutex_unlock(&task_mutex);
             recharge(robot, "Maker");
             sem_post(&sem_make_rooms);
             continue;
@@ -83,7 +79,6 @@ void* maker_robot(void* arg) {
         int task_id = made_count++;
         log_message("Making", robot->id, "Maker", task_id);
 
-        pthread_mutex_unlock(&task_mutex);
         sem_post(&sem_make_rooms);
 
         sleep(2); // Simulate making time
@@ -95,21 +90,17 @@ void* painter_robot(void* arg) {
     Robot *robot = (Robot *)arg;
     while (1) {
         sem_wait(&sem_paint_rooms);
-        pthread_mutex_lock(&task_mutex);
 
         if (painted_count >= made_count) {
             if (made_count >= NUM_TASKS) {
-                pthread_mutex_unlock(&task_mutex);
                 sem_post(&sem_paint_rooms);
                 break;
             }
-            pthread_mutex_unlock(&task_mutex);
             sem_post(&sem_paint_rooms);
             continue;
         }
 
         if (robot->energy < 2) {
-            pthread_mutex_unlock(&task_mutex);
             recharge(robot, "Painter");
             sem_post(&sem_paint_rooms);
             continue;
@@ -119,7 +110,6 @@ void* painter_robot(void* arg) {
         int task_id = painted_count++;
         log_message("Painting", robot->id, "Painter", task_id);
 
-        pthread_mutex_unlock(&task_mutex);
         sem_post(&sem_paint_rooms);
 
         sleep(4); // Simulate painting time
@@ -128,24 +118,20 @@ void* painter_robot(void* arg) {
 }
 
 void* transporter_robot(void* arg) {
-    Robot *robot = (Robot *)arg;
+    Robot *robot = arg;
     while (1) {
         sem_wait(&sem_transport_rooms);
-        pthread_mutex_lock(&task_mutex);
 
         if (transported_count >= painted_count) {
             if (painted_count >= NUM_TASKS) {
-                pthread_mutex_unlock(&task_mutex);
                 sem_post(&sem_transport_rooms);
                 break;
             }
-            pthread_mutex_unlock(&task_mutex);
             sem_post(&sem_transport_rooms);
             continue;
         }
 
         if (robot->energy < 4) {
-            pthread_mutex_unlock(&task_mutex);
             recharge(robot, "Transporter");
             sem_post(&sem_transport_rooms);
             continue;
@@ -156,7 +142,6 @@ void* transporter_robot(void* arg) {
         log_message("Transporting", robot->id, "Transporter", task_id);
         printf("Chair %d finished.\n", task_id + 1);
 
-        pthread_mutex_unlock(&task_mutex);
         sem_post(&sem_transport_rooms);
 
         sleep(3); // Simulate transporting time

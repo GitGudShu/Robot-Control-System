@@ -1,0 +1,14 @@
+#ifndef CAPACITY_H
+#define CAPACITY_H
+
+#define NUM_TASKS 10
+#define NUM_MAKERS 2
+#define NUM_PAINTERS 3
+#define NUM_TRANSPORTERS 1
+
+#define NUM_MAKE_ROOMS 2
+#define NUM_PAINT_ROOMS 2
+#define NUM_TRANSPORT_ROOMS 1
+#define NUM_RECHARGE_ROOMS 2
+
+#endif //CAPACITY_H
