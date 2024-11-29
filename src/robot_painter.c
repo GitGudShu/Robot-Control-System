@@ -11,17 +11,17 @@
 
 // Constants
 // Energy consumed by task
-#define ENERGY_USED_PER_TASK 3
+#define ENERGY_USED_PER_TASK 2
 // Capacity of robot
-#define ENERGY_CAPACITY 5
+#define ENERGY_CAPACITY 6
 // The energy capacity at which the robot is starting
-#define STARTING_ENERGY 5
+#define STARTING_ENERGY 6
 // The robot time to execute the task
-#define TASK_TIME 2
+#define TASK_TIME 4
 // The semaphore we are waiting on to start a task
-#define USED_SEMAPHORE semaphores->sem_make_rooms
+#define USED_SEMAPHORE semaphores->sem_paint_rooms
 // Queue id to use
-#define QUEUE_OFFSET MAKERS_QUEUE_OFFSET
+#define QUEUE_OFFSET PAINTERS_QUEUE_OFFSET
 
 struct Task *tasks;
 struct Semaphores *semaphores;
@@ -37,9 +37,9 @@ void bye() {
 
 void log(const char* msg, int task_id) {
     if (task_id != -1) {
-        printf("[Maker %ld (T%d)] %s\n", robot_id, task_id, msg);
+        printf("[Painter %ld (T%d)] %s\n", robot_id, task_id, msg);
     } else {
-        printf("[Maker %ld] %s\n", robot_id, msg);
+        printf("[Painter %ld] %s\n", robot_id, msg);
     }
 }
 
@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
         msgrcv(queue_id, &message, sizeof(message), 1, 0);
 
         tasks[message.task_index].working = 1;
-        log("Waiting for workshop...", tasks[message.task_index].task_id);
+        log("Waiting for paint room...", tasks[message.task_index].task_id);
         sem_wait(&USED_SEMAPHORE);
 
         log("Working...", tasks[message.task_index].task_id);
@@ -89,10 +89,10 @@ int main(int argc, char *argv[]) {
         tasks[message.task_index].stage = tasks[message.task_index].stage + 1;
         tasks[message.task_index].working = 0;
 
-        log("Made!", tasks[message.task_index].task_id);
-
         energy -= ENERGY_USED_PER_TASK;
         sem_post(&USED_SEMAPHORE);
+
+        log("Painted!", tasks[message.task_index].task_id);
 
         send_message(queue_id, 2, message.task_index);
 

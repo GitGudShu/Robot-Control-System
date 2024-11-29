@@ -4,7 +4,18 @@
 #include <sys/types.h>
 
 #define TASK_SHM_KEY 240
-#define MAKERS_QUEUE_ID 10
+#define SEM_SHM_KEY 250
+
+#define MAKERS_QUEUE_OFFSET 10
+#define PAINTERS_QUEUE_OFFSET 20
+#define TRANSPORTERS_QUEUE_OFFSET 30
+
+struct Semaphores {
+    sem_t sem_recharge_slots;
+    sem_t sem_make_rooms;
+    sem_t sem_paint_rooms;
+    sem_t sem_transport_rooms;
+};
 
 struct Task {
     int task_id;
@@ -20,12 +31,13 @@ struct Robot {
     int id;
     pid_t pid;
     int queue_id;
-    int working;
+    int available;
 };
 
 struct RobotMessage {
     long message_type;
     int task_index;
+    int recharging;
 };
 
 #endif //TASKS_H
