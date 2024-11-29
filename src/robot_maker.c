@@ -35,7 +35,7 @@ void bye() {
     exit(0);
 }
 
-void log(const char* msg, int task_id) {
+void log_message(const char* msg, int task_id) {
     if (task_id != -1) {
         printf("[Maker %ld (T%d)] %s\n", robot_id, task_id, msg);
     } else {
@@ -44,12 +44,12 @@ void log(const char* msg, int task_id) {
 }
 
 void recharge() {
-    log("Recharging...", -1);
+    log_message("Recharging...", -1);
     sem_wait(&semaphores->sem_recharge_slots);
     sleep(5);
     energy = ENERGY_CAPACITY;
     sem_post(&semaphores->sem_recharge_slots);
-    log("Recharged!", -1);
+    log_message("Recharged!", -1);
 }
 
 void send_message(int queue_id, long type, int task_index) {
@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
     signal(SIGTERM, bye);
     signal(SIGINT, bye);
     robot_id = strtol(argv[0], NULL, 10);
-    log("Hello!", -1);
+    log_message("Hello!", -1);
 
     const int task_shmid = shmget(TASK_SHM_KEY, sizeof(struct Task) * NUM_TASKS, 0666);
     tasks = shmat(task_shmid, NULL, 0);
@@ -80,16 +80,16 @@ int main(int argc, char *argv[]) {
         msgrcv(queue_id, &message, sizeof(message), 1, 0);
 
         tasks[message.task_index].working = 1;
-        log("Waiting for workshop...", tasks[message.task_index].task_id);
+        log_message("Waiting for workshop...", tasks[message.task_index].task_id);
         sem_wait(&USED_SEMAPHORE);
 
-        log("Working...", tasks[message.task_index].task_id);
+        log_message("Working...", tasks[message.task_index].task_id);
 
         sleep(2); // Making time
         tasks[message.task_index].stage = tasks[message.task_index].stage + 1;
         tasks[message.task_index].working = 0;
 
-        log("Made!", tasks[message.task_index].task_id);
+        log_message("Made!", tasks[message.task_index].task_id);
 
         energy -= ENERGY_USED_PER_TASK;
         sem_post(&USED_SEMAPHORE);

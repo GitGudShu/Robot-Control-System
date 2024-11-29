@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <wait.h>
+#include <signal.h>
 
 #include "capacity.h"
 #include "tasks.h"

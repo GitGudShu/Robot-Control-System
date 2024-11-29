@@ -53,3 +53,7 @@ dkms.conf
 
 # Vscode
 .vscode/
+
+# build
+src/bin/*
+src/compile.sh
