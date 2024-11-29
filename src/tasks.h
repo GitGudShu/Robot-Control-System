@@ -15,6 +15,7 @@ struct Semaphores {
     sem_t sem_make_rooms;
     sem_t sem_paint_rooms;
     sem_t sem_transport_rooms;
+    sem_t sem_repair_slots;
 };
 
 struct Task {

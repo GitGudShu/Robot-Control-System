@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <sys/msg.h>
 #include <sys/shm.h>
+#include <time.h>
 
 #include "capacity.h"
 #include "tasks.h"
@@ -22,6 +23,8 @@
 #define USED_SEMAPHORE semaphores->sem_make_rooms
 // Queue id to use
 #define QUEUE_OFFSET MAKERS_QUEUE_OFFSET
+// 25% chance of breakdown
+#define BREAKDOWN_PROBABILITY 80
 
 struct Task *tasks;
 struct Semaphores *semaphores;
@@ -52,6 +55,18 @@ void recharge() {
     log_message("Recharged!", -1);
 }
 
+void repair() {
+    log_message("Breaking down, going to repair room...", -1);
+    sem_wait(&semaphores->sem_repair_slots);
+    sleep(5);
+    sem_post(&semaphores->sem_repair_slots);
+    log_message("Repaired and operational!", -1);
+}
+
+int coin_toss(int probability) {
+    return rand() % 100 < probability;
+}
+
 void send_message(int queue_id, long type, int task_index) {
     struct RobotMessage message;
     message.message_type = type;
@@ -64,6 +79,7 @@ void send_message(int queue_id, long type, int task_index) {
 int main(int argc, char *argv[]) {
     signal(SIGTERM, bye);
     signal(SIGINT, bye);
+    srand(time(NULL));
     robot_id = strtol(argv[0], NULL, 10);
     log_message("Hello!", -1);
 
@@ -99,6 +115,10 @@ int main(int argc, char *argv[]) {
         if (energy < ENERGY_USED_PER_TASK) {
             recharge();
             send_message(queue_id, 2, message.task_index);
+        }
+
+        if (coin_toss(BREAKDOWN_PROBABILITY)) {
+            repair();
         }
     }
 }

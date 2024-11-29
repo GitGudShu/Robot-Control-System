@@ -117,6 +117,7 @@ int main() {
     semaphores = shmat(semaphores_shmid, NULL, 0);
 
     sem_init(&semaphores->sem_recharge_slots, 1, NUM_RECHARGE_ROOMS);
+    sem_init(&semaphores->sem_repair_slots, 1, NUM_REPAIR_ROOMS);
     sem_init(&semaphores->sem_make_rooms, 1, NUM_MAKE_ROOMS);
     sem_init(&semaphores->sem_paint_rooms, 1, NUM_PAINT_ROOMS);
     sem_init(&semaphores->sem_transport_rooms, 1, NUM_TRANSPORT_ROOMS);
