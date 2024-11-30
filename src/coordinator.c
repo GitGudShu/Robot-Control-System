@@ -42,7 +42,7 @@ void receive_messages(struct Robot robots[], int size) {
         errno = 0;
         msgrcv(robots[i].queue_id, &rcv_message, sizeof(rcv_message), 2, IPC_NOWAIT);
         if (errno != ENOMSG) {
-            robots[i].available = rcv_message.recharging == 1 ? 0 : 1;
+            robots[i].available = rcv_message.ready_to_work;
         }
     }
 }

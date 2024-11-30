@@ -22,6 +22,8 @@
 #define USED_SEMAPHORE semaphores->sem_transport_rooms
 // Queue id to use
 #define QUEUE_OFFSET TRANSPORTERS_QUEUE_OFFSET
+// 30% chance of breakdown
+#define BREAKDOWN_PROBABILITY 30
 
 struct Task *tasks;
 struct Semaphores *semaphores;
@@ -52,11 +54,23 @@ void recharge() {
     log_message("Recharged!", -1);
 }
 
-void send_message(int queue_id, long type, int task_index) {
+void repair() {
+    log_message("Breaking down, going to repair room...", -1);
+    sem_wait(&semaphores->sem_repair_slots);
+    sleep(5);
+    sem_post(&semaphores->sem_repair_slots);
+    log_message("Repaired and operational!", -1);
+}
+
+int coin_toss(int probability) {
+    return rand() % 100 < probability;
+}
+
+void send_message(int queue_id, long type, int task_index, int ready_to_work) {
     struct RobotMessage message;
     message.message_type = type;
     message.task_index = task_index;
-    message.recharging = energy < ENERGY_USED_PER_TASK ? 1 : 0;
+    message.ready_to_work = ready_to_work;
     msgsnd(queue_id, &message, sizeof(message), 0);
 }
 
@@ -94,11 +108,16 @@ int main(int argc, char *argv[]) {
         energy -= ENERGY_USED_PER_TASK;
         sem_post(&USED_SEMAPHORE);
 
-        send_message(queue_id, 2, message.task_index);
-
         if (energy < ENERGY_USED_PER_TASK) {
+            send_message(queue_id, 2, message.task_index, 0);
             recharge();
-            send_message(queue_id, 2, message.task_index);
         }
+
+        if (coin_toss(BREAKDOWN_PROBABILITY)) {
+            send_message(queue_id, 2, message.task_index, 0);
+            repair();
+        }
+
+        send_message(queue_id, 2, message.task_index, 1);
     }
 }

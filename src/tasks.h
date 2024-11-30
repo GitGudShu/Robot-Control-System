@@ -38,7 +38,7 @@ struct Robot {
 struct RobotMessage {
     long message_type;
     int task_index;
-    int recharging;
+    int ready_to_work;
 };
 
 #endif //TASKS_H
